@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <title>ez-offscreen-canvas tests</title>
+
+  <link rel="stylesheet" href="./node_modules/qunit/qunit/qunit.css">
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script src="./node_modules/qunit/qunit/qunit.js"></script>
+  <script type="module">
+    import { ezOffscreenCanvas } from './ez-offscreen-canvas.js';
+
+    const { module, test } = QUnit;
+
+    const wait = (condition, timeout) => new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      const endTime = startTime + timeout;
+
+      const checkCondition = () => {
+        if (condition()) {
+          resolve();
+        } else if (Date.now() > endTime) {
+          reject();
+        } else {
+          setTimeout(checkCondition);
+        }
+      };
+
+      checkCondition();
+    });
+
+    module('ez-offscreen-canvas', function() {
+      test('throws an error if OffscreenCanvas is not support', function(assert) {
+        const transferControlToOffscreen = HTMLCanvasElement.prototype.transferControlToOffscreen;
+        delete HTMLCanvasElement.prototype.transferControlToOffscreen;
+
+        const canvas = document.getElementById('canvas');
+        const props = {};
+        const code = () => {};
+        assert.throws(
+          () => ezOffscreenCanvas(canvas, props, code),
+          new RegExp('The ezOffscreenCanvas can only be used in browsers that support OffscreenCanvas. For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.')
+        );
+
+        HTMLCanvasElement.prototype.transferControlToOffscreen = transferControlToOffscreen;
+      });
+
+      test('throws an error if the first argument is not an instance of HTMLCanvasElement', function(assert) {
+        const canvas = document.createElement('div');
+        const props = {};
+        const code = () => {};
+        assert.throws(
+          () => ezOffscreenCanvas(canvas, props, code),
+          new RegExp('The first argument to ezOffscreenCanvas must be an instance of HTMLCanvasElement. For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.')
+        );
+      });
+
+      test('throws an error if the second argument is not an object or null', function(assert) {
+        const canvas = document.getElementById('canvas');
+        const props = 1337;
+        const code = () => {};
+        assert.throws(
+          () => ezOffscreenCanvas(canvas, props, code),
+          new RegExp('The second argument to ezOffscreenCanvas must be an object or null. For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.')
+        );
+      });
+
+      test('throws an error if the third argument not a function', function(assert) {
+        const canvas = document.getElementById('canvas');
+        const props = {};
+        const code = 'some code';
+        assert.throws(
+          () => ezOffscreenCanvas(canvas, props, code),
+          new RegExp('The third argument to ezOffscreenCanvas must be a function. For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.')
+        );
+      });
+
+      test('creates a Worker that gets passed an OffscreenCanvas', async function(assert) {
+        assert.expect(0);
+
+        const canvas = document.getElementById('canvas');
+        const props = null;
+        const code = ({ canvas }) => {
+          const context = canvas.getContext('2d');
+          context.strokeRect(0, 0, 1, 1);
+        };
+
+        const originalDataURL = canvas.toDataURL();
+
+        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+        await wait(() => canvas.toDataURL() !== originalDataURL, 1000);
+
+        offscreenCanvasWorker.terminate();
+      });
+
+      test('creates a Worker that gets passed an OffscreenCanvas with other props', async function(assert) {
+        assert.expect(0);
+
+        const canvas = document.getElementById('canvas');
+        const props = { drawRect: true };
+        const code = ({ canvas, drawRect }) => {
+          const context = canvas.getContext('2d');
+          if (drawRect) context.strokeRect(0, 0, 1, 1);
+        };
+
+        const originalDataURL = canvas.toDataURL();
+
+        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+        await wait(() => canvas.toDataURL() !== originalDataURL, 1000);
+
+        offscreenCanvasWorker.terminate();
+      });
+    });
+  </script>
+</body>
+</html>
