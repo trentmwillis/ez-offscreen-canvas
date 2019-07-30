@@ -4,7 +4,8 @@
   "description": "A small library to make it easier to use OffscreenCanvas in a Web Worker",
   "main": "ez-offscreen-canvas.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "testem ci",
+    "test:dev": "testem dev"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/trentmwillis/ez-offscreen-canvas#readme",
   "devDependencies": {
-    "qunit": "^2.9.2"
+    "qunit": "^2.9.2",
+    "testem": "^2.17.0"
   }
 }

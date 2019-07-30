@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:lts-browsers
+    steps:
+      - checkout
+
+      # Logging Environment Version Info
+      - run: npm -v
+      - run: node -v
+
+      # Installing Dependencies
+      - run: npm install
+
+      # Run Tests
+      - run: npm test
