@@ -14,13 +14,14 @@ Here's a short example of how it is used:
 <canvas></canvas>
 
 <script type="module">
-  import { ezOffscreenCanvas } from './ez-offscreen-canvas.js';
+   import { ezOffscreenCanvas } from 'https://unpkg.com/ez-offscreen-canvas@0.1.0/ez-offscreen-canvas.js';
 
   const canvas = document.querySelector('canvas');
-  const props = { startTime: Date.now() };
-  const render = ({ canvas, startTime }) => {
+  const props = { color: 'red' };
+  const render = ({ canvas, color }) => {
     const context = canvas.getContext('2d');
-    context.fillText(`Started this drawing at ${startTime}`, 10, 10);
+    context.fillStyle = color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   const { terminate } = ezOffscreenCanvas(canvas, props, render);
@@ -28,3 +29,5 @@ Here's a short example of how it is used:
   setTimeout(terminate, 10000);
 </script>
 ```
+
+See [the above code running live on CodePen](https://codepen.io/trentmwillis/pen/LwyZQW).
