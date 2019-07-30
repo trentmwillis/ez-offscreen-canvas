@@ -7,7 +7,7 @@
 
   <title>ez-offscreen-canvas tests</title>
 
-  <link rel="stylesheet" href="./node_modules/qunit/qunit/qunit.css">
+  <link rel="stylesheet" href="/node_modules/qunit/qunit/qunit.css">
 </head>
 <body>
   <div id="qunit"></div>
@@ -15,7 +15,7 @@
     <canvas id="canvas"></canvas>
   </div>
 
-  <script src="./node_modules/qunit/qunit/qunit.js"></script>
+  <script src="/node_modules/qunit/qunit/qunit.js"></script>
   <script type="module">
     import { ezOffscreenCanvas } from './ez-offscreen-canvas.js';
 
@@ -98,7 +98,7 @@
 
         const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
 
-        await wait(() => canvas.toDataURL() !== originalDataURL, 1000);
+        await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
 
         offscreenCanvasWorker.terminate();
       });
@@ -117,11 +117,12 @@
 
         const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
 
-        await wait(() => canvas.toDataURL() !== originalDataURL, 1000);
+        await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
 
         offscreenCanvasWorker.terminate();
       });
     });
   </script>
+  <script src="/testem.js"></script>
 </body>
 </html>
