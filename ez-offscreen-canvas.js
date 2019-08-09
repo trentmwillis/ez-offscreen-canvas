@@ -15,18 +15,35 @@ export const ezOffscreenCanvas = (canvas, props, code) => {
   if (typeof code !== 'function')
     throw new Error(`The third argument to ezOffscreenCanvas must be a function. ${moreInfoMessage}`);
 
-  const workerCode = `const render = (${code});\nonmessage = (event) => render(event.data);`;
+  const workerCode = `const render = (${code});\nlet _canvas;onmessage = (event) => {
+    if (event.data._type === 'render') {
+      _canvas = event.data.props.canvas;
+      render(event.data.props);
+    } else if (event.data._type === 'setAttributes') {
+      Object.entries(event.data.attributes).forEach(([key, value]) => _canvas[key] = value);
+    }
+  };`;
   const blobOfWorkerCode = new Blob([workerCode], {type: 'application/javascript'});
   const workerCodeUrl = URL.createObjectURL(blobOfWorkerCode);
 
   const worker = new Worker(workerCodeUrl);
   const offscreenCanvas = canvas.transferControlToOffscreen();
   worker.postMessage({
-    ...props,
-    canvas: offscreenCanvas
+    _type: 'render',
+    props: {
+      ...props,
+      canvas: offscreenCanvas
+    }
   }, [offscreenCanvas]);
 
   return {
+    setAttributes(attributes) {
+      worker.postMessage({
+        _type: 'setAttributes',
+        attributes,
+      });
+    },
+
     terminate() {
       worker.terminate();
     }

@@ -14,7 +14,7 @@ Here's a short example of how it is used:
 <canvas></canvas>
 
 <script type="module">
-   import { ezOffscreenCanvas } from 'https://unpkg.com/ez-offscreen-canvas@0.1.0/ez-offscreen-canvas.js';
+   import { ezOffscreenCanvas } from 'https://unpkg.com/ez-offscreen-canvas';
 
   const canvas = document.querySelector('canvas');
   const props = { color: 'red' };
@@ -24,9 +24,10 @@ Here's a short example of how it is used:
     context.fillRect(0, 0, canvas.width, canvas.height);
   };
 
-  const { terminate } = ezOffscreenCanvas(canvas, props, render);
+  const offscreenCanvas = ezOffscreenCanvas(canvas, props, render);
+  offscreenCanvas.setAttributes({ width: 700, height: 350 });
 
-  setTimeout(terminate, 10000);
+  setTimeout(offscreenCanvas.terminate, 10000);
 </script>
 ```
 

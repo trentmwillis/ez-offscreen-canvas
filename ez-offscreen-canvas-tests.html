@@ -121,6 +121,27 @@
 
         offscreenCanvasWorker.terminate();
       });
+
+      test('can set attributes on the canvas', async function(assert) {
+        assert.expect(2);
+
+        const canvas = document.getElementById('canvas');
+        const props = null;
+        const code = ({ canvas }) => {
+          const context = canvas.getContext('2d');
+          context.strokeRect(0, 0, 1, 1);
+        };
+        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+        assert.equal(canvas.height, 150);
+        assert.equal(canvas.width, 300);
+
+        offscreenCanvasWorker.setAttributes({ width: 700, height: 350 });
+        await wait(() => canvas.width === 700, 5000);
+        await wait(() => canvas.height === 350, 5000);
+
+        offscreenCanvasWorker.terminate();
+      });
     });
   </script>
   <script src="/testem.js"></script>
