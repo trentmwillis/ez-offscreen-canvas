@@ -1,6 +1,6 @@
 {
   "name": "ez-offscreen-canvas",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A small library to make it easier to use OffscreenCanvas in a Web Worker",
   "main": "ez-offscreen-canvas.js",
   "scripts": {
