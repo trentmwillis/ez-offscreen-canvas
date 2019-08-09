@@ -18,15 +18,29 @@ Here's a short example of how it is used:
 
   const canvas = document.querySelector('canvas');
   const props = { color: 'red' };
+
+  // The code in this function will run in a Web Worker
+  // which means it can't access variables in the closure
   const render = ({ canvas, color }) => {
     const context = canvas.getContext('2d');
-    context.fillStyle = color;
-    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const draw = () => {
+      context.fillStyle = color;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      requestAnimationFrame(draw);
+    };
+
+    draw();
   };
 
   const offscreenCanvas = ezOffscreenCanvas(canvas, props, render);
+
+  // Since control has been transferred to an OffscreenCanvas
+  // we can't set attributes on the original canvas directly
   offscreenCanvas.setAttributes({ width: 700, height: 350 });
 
+  // Make sure we cleanup the Web Worker when no longer needed
   setTimeout(offscreenCanvas.terminate, 10000);
 </script>
 ```
