@@ -39,7 +39,7 @@
     });
 
     module('ez-offscreen-canvas', function() {
-      test('throws an error if OffscreenCanvas is not support', function(assert) {
+      test('throws an error if OffscreenCanvas is not support and workerOnly option is true', function(assert) {
         const transferControlToOffscreen = HTMLCanvasElement.prototype.transferControlToOffscreen;
         delete HTMLCanvasElement.prototype.transferControlToOffscreen;
 
@@ -47,7 +47,7 @@
         const props = {};
         const code = () => {};
         assert.throws(
-          () => ezOffscreenCanvas(canvas, props, code),
+          () => ezOffscreenCanvas(canvas, props, code, { workerOnly: true }),
           new RegExp('The ezOffscreenCanvas can only be used in browsers that support OffscreenCanvas. For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.')
         );
 
@@ -84,63 +84,135 @@
         );
       });
 
-      test('creates a Worker that gets passed an OffscreenCanvas', async function(assert) {
-        assert.expect(0);
+      module('OffscreenCanvas is supported', function() {
+        test('creates a Worker that gets passed an OffscreenCanvas', async function(assert) {
+          assert.expect(0);
 
-        const canvas = document.getElementById('canvas');
-        const props = null;
-        const code = ({ canvas }) => {
-          const context = canvas.getContext('2d');
-          context.strokeRect(0, 0, 1, 1);
-        };
+          const canvas = document.getElementById('canvas');
+          const props = null;
+          const code = ({ canvas }) => {
+            const context = canvas.getContext('2d');
+            context.strokeRect(0, 0, 1, 1);
+          };
 
-        const originalDataURL = canvas.toDataURL();
+          const originalDataURL = canvas.toDataURL();
 
-        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
 
-        await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
+          await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
 
-        offscreenCanvasWorker.terminate();
+          offscreenCanvasWorker.terminate();
+        });
+
+        test('creates a Worker that gets passed an OffscreenCanvas with other props', async function(assert) {
+          assert.expect(0);
+
+          const canvas = document.getElementById('canvas');
+          const props = { drawRect: true };
+          const code = ({ canvas, drawRect }) => {
+            const context = canvas.getContext('2d');
+            if (drawRect) context.strokeRect(0, 0, 1, 1);
+          };
+
+          const originalDataURL = canvas.toDataURL();
+
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+          await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
+
+          offscreenCanvasWorker.terminate();
+        });
+
+        test('can set attributes on the canvas', async function(assert) {
+          assert.expect(2);
+
+          const canvas = document.getElementById('canvas');
+          const props = null;
+          const code = ({ canvas }) => {
+            const context = canvas.getContext('2d');
+            context.strokeRect(0, 0, 1, 1);
+          };
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+          assert.equal(canvas.height, 150);
+          assert.equal(canvas.width, 300);
+
+          offscreenCanvasWorker.setAttributes({ width: 700, height: 350 });
+          await wait(() => canvas.width === 700, 5000);
+          await wait(() => canvas.height === 350, 5000);
+
+          offscreenCanvasWorker.terminate();
+        });
       });
 
-      test('creates a Worker that gets passed an OffscreenCanvas with other props', async function(assert) {
-        assert.expect(0);
+      module('OffscreenCanvas is NOT supported', function(hooks) {
+        hooks.beforeEach(function() {
+          this.transferControlToOffscreen = HTMLCanvasElement.prototype.transferControlToOffscreen;
+          delete HTMLCanvasElement.prototype.transferControlToOffscreen;
+        });
 
-        const canvas = document.getElementById('canvas');
-        const props = { drawRect: true };
-        const code = ({ canvas, drawRect }) => {
-          const context = canvas.getContext('2d');
-          if (drawRect) context.strokeRect(0, 0, 1, 1);
-        };
+        hooks.afterEach(function() {
+          HTMLCanvasElement.prototype.transferControlToOffscreen = this.transferControlToOffscreen;
+        });
 
-        const originalDataURL = canvas.toDataURL();
+        test('invokes the render function with the canvas', async function(assert) {
+          assert.expect(0);
 
-        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+          const canvas = document.getElementById('canvas');
+          const props = null;
+          const code = ({ canvas }) => {
+            const context = canvas.getContext('2d');
+            context.strokeRect(0, 0, 1, 1);
+          };
 
-        await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
+          const originalDataURL = canvas.toDataURL();
 
-        offscreenCanvasWorker.terminate();
-      });
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
 
-      test('can set attributes on the canvas', async function(assert) {
-        assert.expect(2);
+          await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
 
-        const canvas = document.getElementById('canvas');
-        const props = null;
-        const code = ({ canvas }) => {
-          const context = canvas.getContext('2d');
-          context.strokeRect(0, 0, 1, 1);
-        };
-        const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+          offscreenCanvasWorker.terminate();
+        });
 
-        assert.equal(canvas.height, 150);
-        assert.equal(canvas.width, 300);
+        test('invokes the render function with the canvas and other props', async function(assert) {
+          assert.expect(0);
 
-        offscreenCanvasWorker.setAttributes({ width: 700, height: 350 });
-        await wait(() => canvas.width === 700, 5000);
-        await wait(() => canvas.height === 350, 5000);
+          const canvas = document.getElementById('canvas');
+          const props = { drawRect: true };
+          const code = ({ canvas, drawRect }) => {
+            const context = canvas.getContext('2d');
+            if (drawRect) context.strokeRect(0, 0, 1, 1);
+          };
 
-        offscreenCanvasWorker.terminate();
+          const originalDataURL = canvas.toDataURL();
+
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+          await wait(() => canvas.toDataURL() !== originalDataURL, 5000);
+
+          offscreenCanvasWorker.terminate();
+        });
+
+        test('can set attributes on the canvas', async function(assert) {
+          assert.expect(2);
+
+          const canvas = document.getElementById('canvas');
+          const props = null;
+          const code = ({ canvas }) => {
+            const context = canvas.getContext('2d');
+            context.strokeRect(0, 0, 1, 1);
+          };
+          const offscreenCanvasWorker = ezOffscreenCanvas(canvas, props, code);
+
+          assert.equal(canvas.height, 150);
+          assert.equal(canvas.width, 300);
+
+          offscreenCanvasWorker.setAttributes({ width: 700, height: 350 });
+          await wait(() => canvas.width === 700, 5000);
+          await wait(() => canvas.height === 350, 5000);
+
+          offscreenCanvasWorker.terminate();
+        });
       });
     });
   </script>
