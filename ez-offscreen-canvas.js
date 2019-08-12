@@ -2,19 +2,7 @@ const isOffscreenCanvasSupported = () => 'transferControlToOffscreen' in HTMLCan
 
 const moreInfoMessage = 'For more info, see the documentation at https://pretty-okay.dev/ez-offscreen-canvas.';
 
-export const ezOffscreenCanvas = (canvas, props, code) => {
-  if (!isOffscreenCanvasSupported())
-    throw new Error(`The ezOffscreenCanvas can only be used in browsers that support OffscreenCanvas. ${moreInfoMessage}`);
-
-  if (!(canvas instanceof HTMLCanvasElement))
-    throw new Error(`The first argument to ezOffscreenCanvas must be an instance of HTMLCanvasElement. ${moreInfoMessage}`);
-
-  if (typeof props !== 'object')
-    throw new Error(`The second argument to ezOffscreenCanvas must be an object or null. ${moreInfoMessage}`);
-
-  if (typeof code !== 'function')
-    throw new Error(`The third argument to ezOffscreenCanvas must be a function. ${moreInfoMessage}`);
-
+const ezOffscreenCanvasWorker = (canvas, props, code) => {
   const workerCode = `const render = (${code});\nlet _canvas;onmessage = (event) => {
     if (event.data._type === 'render') {
       _canvas = event.data.props.canvas;
@@ -48,4 +36,37 @@ export const ezOffscreenCanvas = (canvas, props, code) => {
       worker.terminate();
     }
   };
+};
+
+const ezOffscreenCanvasMainThread = (canvas, props, code) => {
+  // "Clone" the function so that it is no longer in scope.
+  // However, we can't prevent folks from accessing things in global scope.
+  const render = new Function(`return ${code}`)();
+  Promise.resolve().then(() => render({ ...props, canvas }));
+
+  return {
+    setAttributes(attributes) {
+      Object.entries(attributes).forEach(([key, value]) => canvas[key] = value);
+    },
+
+    terminate() {}
+  };
+};
+
+export const ezOffscreenCanvas = (canvas, props, code, options = {}) => {
+  if (!(canvas instanceof HTMLCanvasElement))
+    throw new Error(`The first argument to ezOffscreenCanvas must be an instance of HTMLCanvasElement. ${moreInfoMessage}`);
+
+  if (typeof props !== 'object')
+    throw new Error(`The second argument to ezOffscreenCanvas must be an object or null. ${moreInfoMessage}`);
+
+  if (typeof code !== 'function')
+    throw new Error(`The third argument to ezOffscreenCanvas must be a function. ${moreInfoMessage}`);
+
+  if (!isOffscreenCanvasSupported()) {
+    if (options.workerOnly) throw new Error(`The ezOffscreenCanvas can only be used in browsers that support OffscreenCanvas. ${moreInfoMessage}`);
+    return ezOffscreenCanvasMainThread(canvas, props, code);
+  }
+
+  return ezOffscreenCanvasWorker(canvas, props, code);
 };

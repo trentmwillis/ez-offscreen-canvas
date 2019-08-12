@@ -7,6 +7,7 @@ This is a tiny library to make it easier to use [`OffscreenCanvas`](https://deve
 1. Creates the `OffscreenCanvas` instance from a given `<canvas>` element.
 2. Passes the `OffscreenCanvas` and other values from the main thread to a `Worker` thread.
 3. Allows you to write your `Worker` code in the main thread as a function.
+4. Falls back to running in the main thread if `OffscreenCanvas` is not supported.
 
 Here's a short example of how it is used:
 
@@ -46,3 +47,11 @@ Here's a short example of how it is used:
 ```
 
 See [the above code running live on CodePen](https://codepen.io/trentmwillis/pen/LwyZQW).
+
+## Requiring OffscreenCanvas in a Web Worker
+
+If you only want the render function to run if `OffscreenCanvas` is available and can run in a Web Worker, then pass an options hash with `workerOnly` set to `true` as the fourth argument to the `ezOffscreenCanvas` method:
+
+```javascript
+ezOffscreenCanvas(canvas, props, render, { workerOnly: true });
+```
